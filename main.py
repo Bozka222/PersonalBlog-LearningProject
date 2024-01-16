@@ -23,6 +23,7 @@ Bootstrap5(app)
 # Configure Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
+year = date.today().year
 
 
 @login_manager.user_loader
@@ -124,7 +125,7 @@ def register():
         db.session.commit()
         login_user(new_user)
         return redirect(url_for("get_all_posts"))
-    return render_template("register.html", form=form, current_user=current_user)
+    return render_template("register.html", form=form, current_user=current_user, year=year)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -143,7 +144,7 @@ def login():
         else:
             login_user(user)
             return redirect(url_for('get_all_posts'))
-    return render_template("login.html", form=form, current_user=current_user)
+    return render_template("login.html", form=form, current_user=current_user, year=year)
 
 
 @app.route('/logout')
@@ -157,7 +158,8 @@ def get_all_posts():
     msg_sent = request.args.get('msg_sent')
     result = db.session.execute(db.select(BlogPost))
     posts = result.scalars().all()
-    return render_template("index.html", all_posts=posts, current_user=current_user, msg_sent=msg_sent)
+    return render_template("index.html", all_posts=posts, current_user=current_user,
+                           msg_sent=msg_sent, year=year)
 
 
 # Add a POST method to be able to post comments
@@ -177,7 +179,8 @@ def show_post(post_id):
         )
         db.session.add(new_comment)
         db.session.commit()
-    return render_template("post.html", post=requested_post, current_user=current_user, form=comment_form)
+    return render_template("post.html", post=requested_post, current_user=current_user,
+                           form=comment_form, year=year)
 
 
 @app.route("/new-post", methods=["GET", "POST"])
@@ -196,7 +199,7 @@ def add_new_post():
         db.session.add(new_post)
         db.session.commit()
         return redirect(url_for("get_all_posts"))
-    return render_template("make-post.html", form=form, current_user=current_user)
+    return render_template("make-post.html", form=form, current_user=current_user, year=year)
 
 
 @app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
@@ -217,7 +220,8 @@ def edit_post(post_id):
         post.body = edit_form.body.data
         db.session.commit()
         return redirect(url_for("show_post", post_id=post.id))
-    return render_template("make-post.html", form=edit_form, is_edit=True, current_user=current_user)
+    return render_template("make-post.html", form=edit_form, is_edit=True,
+                           current_user=current_user, year=year)
 
 
 @app.route("/delete/<int:post_id>")
@@ -231,7 +235,7 @@ def delete_post(post_id):
 
 @app.route("/about")
 def about():
-    return render_template("about.html", current_user=current_user)
+    return render_template("about.html", current_user=current_user, year=year)
 
 
 @app.route("/contact", methods=["GET", "POST"])
@@ -240,7 +244,7 @@ def contact():
         data = request.form
         send_email(data["name"], data["email"], data["phone"], data["message"])
         return redirect(url_for('get_all_posts', msg_sent=True))
-    return render_template("contact.html", msg_sent=False)
+    return render_template("contact.html", msg_sent=False, year=year)
 
 
 def send_email(name, email, phone, message):
